@@ -279,17 +279,25 @@ export default function DynamicProductPage({ params }: { params: Promise<{ produ
                             <div className="space-y-6">
                                 <div className="relative w-full aspect-square bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                                     {currentImage ? (
-                                        <Image
-                                            src={currentImage}
-                                            alt={`${product.name} - Image ${selectedImage + 1}`}
-                                            fill
-                                            className={`object-cover transition-all duration-300 ${
-                                                !product.inStock ? 'brightness-50' : 'hover:scale-105'
-                                            }`}
-                                            priority={true}
-                                            quality={95}
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                                        />
+                                        <div className="relative w-full aspect-square">
+                                            <Image
+                                                src={currentImage}
+                                                alt={`${product.name} - Image ${selectedImage + 1}`}
+                                                fill
+                                                className={`object-cover transition-all duration-300 ${
+                                                    !product.inStock ? 'brightness-50' : 'hover:scale-105'
+                                                }`}
+                                                priority={true}
+                                                quality={95}
+                                                decoding="async"
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                                                style={{
+                                                    background: 'linear-gradient(to right, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s ease-in-out infinite'
+                                                }}
+                                            />
+                                        </div>
                                     ) : (
                                         <div className="flex items-center justify-center h-full">
                                             <div className="text-center">
@@ -329,17 +337,26 @@ export default function DynamicProductPage({ params }: { params: Promise<{ produ
                                                     : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
                                             }`}
                                         >
-                                            <Image
-                                                src={image}
-                                                alt={`${product.name} - View ${thumbIndex + 1}`}
-                                                fill
-                                                className="object-cover"
-                                                loading="lazy"
-                                                quality={75}
-                                                onError={() => {
-                                                    setBrokenImageIndices(prev => new Set([...prev, thumbIndex]))
-                                                }}
-                                            />
+                                            <div className="relative w-full h-full">
+                                                <Image
+                                                    src={image}
+                                                    alt={`${product.name} - View ${thumbIndex + 1}`}
+                                                    fill
+                                                    className="object-cover"
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    quality={75}
+                                                    sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, 96px"
+                                                    style={{
+                                                        background: 'linear-gradient(to right, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+                                                        backgroundSize: '200% 100%',
+                                                        animation: 'shimmer 1.5s ease-in-out infinite'
+                                                    }}
+                                                    onError={() => {
+                                                        setBrokenImageIndices(prev => new Set([...prev, thumbIndex]))
+                                                    }}
+                                                />
+                                            </div>
                                         </button>
                                         );
                                     })}
@@ -501,15 +518,25 @@ export default function DynamicProductPage({ params }: { params: Promise<{ produ
                                                                 </span>
                                                             )}
                                                             {rel.image && (
-                                                                <Image
-                                                                    src={rel.image}
-                                                                    alt={rel.name}
-                                                                    fill
-                                                                    className={`object-cover group-hover:scale-110 transition-transform duration-500 ${
-                                                                        !rel.inStock ? 'brightness-50' : ''
-                                                                    }`}
-                                                                    quality={80}
-                                                                />
+                                                                <div className="relative w-full aspect-square">
+                                                                    <Image
+                                                                        src={rel.image}
+                                                                        alt={rel.name}
+                                                                        fill
+                                                                        className={`object-cover group-hover:scale-110 transition-transform duration-500 ${
+                                                                            !rel.inStock ? 'brightness-50' : ''
+                                                                        }`}
+                                                                        loading="lazy"
+                                                                        decoding="async"
+                                                                        quality={80}
+                                                                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
+                                                                        style={{
+                                                                            background: 'linear-gradient(to right, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+                                                                            backgroundSize: '200% 100%',
+                                                                            animation: 'shimmer 1.5s ease-in-out infinite'
+                                                                        }}
+                                                                    />
+                                                                </div>
                                                             )}
                                                             {!rel.inStock && (
                                                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">

@@ -280,11 +280,21 @@ const Checkout = () => {
                                                     {cartItems.map((item) => (
                                                     <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0 relative">
                                                         <Link href="/shop">
-                                                            <img
-                                                                src={item.image}
-                                                                alt={item.name}
-                                                                className="w-16 h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                                                            />
+                                                            <div className="relative w-16 h-16 flex-shrink-0">
+                                                                <img
+                                                                    src={item.image}
+                                                                    alt={item.name}
+                                                                    className="w-16 h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                                    loading="lazy"
+                                                                    decoding="async"
+                                                                    sizes="64px"
+                                                                    style={{
+                                                                        background: 'linear-gradient(to right, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+                                                                        backgroundSize: '200% 100%',
+                                                                        animation: 'shimmer 1.5s ease-in-out infinite'
+                                                                    }}
+                                                                />
+                                                            </div>
                                                         </Link>
                                                         
                                                         <div className="flex-1">

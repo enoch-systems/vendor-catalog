@@ -226,30 +226,46 @@ const Featured = ({ initialProducts = [] }: FeaturedProps) => {
                 ) : (
                     <AnimatedGroup variants={transitionVariants}>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-                            {featuredProducts.map((product) => (
+                            {featuredProducts.map((product, index) => (
                                 <Link key={product.id} href={`/shop/${product.id}`} className="block">
                                 <div className="bg-white border border-green-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group">
                                     {/* Product Image */}
                                     <div className="relative overflow-hidden rounded-t-lg h-64 sm:h-72">
                                         {product.image ? (
-                                            <Image
-                                                src={product.image}
-                                                alt={product.name}
-                                                width={300}
-                                                height={300}
-                                                className={`w-full h-64 sm:h-72 object-cover group-hover:scale-105 transition-transform duration-300 ${
-                                                    !product.inStock ? 'brightness-50' : ''
-                                                }`}
-                                                priority
-                                            />
+                                            <div className="relative w-full h-64 sm:h-72">
+                                                <Image
+                                                    src={product.image}
+                                                    alt={product.name}
+                                                    width={300}
+                                                    height={300}
+                                                    className={`w-full h-64 sm:h-72 object-cover group-hover:scale-105 transition-transform duration-300 ${
+                                                        !product.inStock ? 'brightness-50' : ''
+                                                    }`}
+                                                    loading={index < 4 ? undefined : "lazy"}
+                                                    decoding="async"
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 25vw"
+                                                    priority={index < 4}
+                                                    style={{ 
+                                                        background: 'linear-gradient(to right, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+                                                        backgroundSize: '200% 100%',
+                                                        animation: 'shimmer 1.5s ease-in-out infinite'
+                                                    }}
+                                                />
+                                            </div>
                                         ) : (
-                                            <Image
-                                                src="/placeholder.png"
-                                                alt="no image"
-                                                width={300}
-                                                height={300}
-                                                className="w-full h-64 sm:h-72 object-cover"
-                                            />
+                                            <div className="relative w-full h-64 sm:h-72">
+                                                <Image
+                                                    src="/placeholder.png"
+                                                    alt="no image"
+                                                    width={300}
+                                                    height={300}
+                                                    className="w-full h-64 sm:h-72 object-cover"
+                                                    loading={index < 4 ? undefined : "lazy"}
+                                                    decoding="async"
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 25vw"
+                                                    priority={index < 4}
+                                                />
+                                            </div>
                                         )}
                                         
                                         {/* Badge */}

@@ -225,58 +225,69 @@ export default function HeroSection({ initialFeatured = [] }: HeroSectionProps) 
 
                         <div className="mx-auto max-w-7xl px-6">
                             <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
-                                <AnimatedGroup variants={transitionVariants} className="relative z-1">
-                                    {!profileDropdownOpen && !mobileMenuOpen && (
-                                        <div ref={searchWrapperRef} className="hover:bg-background bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-2 pl-4 shadow-md shadow-zinc-950/5 transition-colors duration-300">
-                                            <input
-                                                type="text"
-                                                placeholder="Search products...."
-                                                className="text-foreground text-sm bg-transparent outline-none w-64 placeholder:text-muted-foreground"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                style={{ fontSize: '16px' }}
-                                            />
-                                            <span className="block h-4 w-0.5 border-l bg-white"></span>
-                                            <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500 flex items-center justify-center">
-                                                <Search className="m-auto size-3" />
-                                            </div>
+                                <AnimatedGroup variants={transitionVariants} className="relative z-[10000]">
+                                    <div ref={searchWrapperRef} className="hover:bg-background bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-2 pl-4 shadow-md shadow-zinc-950/5 transition-colors duration-300">
+                                        <input
+                                            type="text"
+                                            placeholder="Search products...."
+                                            className="text-foreground text-sm bg-transparent outline-none w-64 placeholder:text-muted-foreground"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            style={{ fontSize: '16px' }}
+                                        />
+                                        <span className="block h-4 w-0.5 border-l bg-white"></span>
+                                        <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500 flex items-center justify-center">
+                                            <Search className="m-auto size-3" />
                                         </div>
-                                    )}
+                                    </div>
                                 </AnimatedGroup>
                             </div>
                         </div>
 
-                        {/* backdrop blur layer */}
+                        {/* backdrop layer */}
                         {searchQuery && filteredProducts.length > 0 && (
                             <div
-                                className="fixed inset-0 bg-white/25 backdrop-blur-sm z-[9998] cursor-pointer"
+                                className="fixed inset-0 bg-black/10 backdrop-blur-sm z-[9998] cursor-pointer"
                                 onClick={() => setSearchQuery('')}
                             />
                         )}
 
-                        {/* search results dropdown */}
+                        {/* search results below search bar */}
                         {searchQuery && filteredProducts.length > 0 && resultsStyle && (
                             <div
-                                className="fixed bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto z-[9999]"
+                                className="fixed bg-white border border-gray-300 rounded-lg shadow-lg w-[500px] h-80 overflow-y-auto z-[9999]"
                                 style={{
                                     top: resultsStyle.top + 8,
                                     left: resultsStyle.left,
-                                    transform: 'translateX(-50%)',
-                                    width: resultsStyle.width
+                                    transform: 'translateX(-50%)'
                                 }}
                             >
                                 {filteredProducts.slice(0, 20).map(product => (
                                     <Link key={product.id} href={`/shop/${product.id}`} onClick={() => setSearchQuery('')}>
                                         <div className="flex items-center p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
                                             {product.image ? (
-                                                <img src={product.image} alt={product.name} className="w-10 h-10 object-cover rounded mr-3" />
+                                                <div className="relative w-10 h-10 mr-3 flex-shrink-0">
+                                                    <img 
+                                                        src={product.image} 
+                                                        alt={product.name} 
+                                                        className="w-10 h-10 object-cover rounded"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        sizes="40px"
+                                                        style={{ 
+                                                            background: 'linear-gradient(to right, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s ease-in-out infinite'
+                                                        }}
+                                                    />
+                                                </div>
                                             ) : (
-                                                <div className="w-10 h-10 bg-gray-200 rounded mr-3 flex items-center justify-center">
+                                                <div className="w-10 h-10 bg-gray-200 rounded mr-3 flex items-center justify-center flex-shrink-0">
                                                     <span className="text-xs text-gray-400">N/A</span>
                                                 </div>
                                             )}
-                                            <div className="flex-1">
-                                                <p className="text-sm font-semibold text-gray-900">{product.name.charAt(0).toUpperCase() + product.name.slice(1).toLowerCase()}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 truncate">{product.name.charAt(0).toUpperCase() + product.name.slice(1).toLowerCase()}</p>
                                                 <p className="text-xs text-gray-500">{product.price}</p>
                                             </div>
                                         </div>

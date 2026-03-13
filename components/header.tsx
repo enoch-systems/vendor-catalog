@@ -39,7 +39,6 @@ export const HeroHeader = () => {
         { name: 'Home', href: '/', icon: HousePlus },
         { name: 'Shop Wigs', href: '/shop', icon: ShoppingBag },
         { name: 'Check out', href: '/checkout', icon: CreditCard },
-        { name: 'Help', href: '/help', icon: HelpCircle },
         ...(user ? [{ name: 'My Account', href: '/admin/products', icon: User, customIcon: '/avatar.jpeg' }] : [])
     ]
 
@@ -115,7 +114,7 @@ export const HeroHeader = () => {
                                 }}
                                 aria-label="home"
                                 className={cn("flex items-center space-x-2", mobileMenuOpen && "hidden")}>
-                                <LogoIcon className="h-8 w-auto" />
+                                <LogoIcon className="h-8 w-auto" priority={true} />
                                 <span className="text-lg font-semibold">Wigga</span>
                             </Link>
 
@@ -182,10 +181,10 @@ export const HeroHeader = () => {
 
                         <div ref={mobileMenuRef} data-state={mobileMenuOpen ? 'active' : ''} className="fixed z-50 right-0 top-0 h-screen w-64 bg-slate-800 transform translate-x-full transition-transform duration-1000 data-[state=active]:translate-x-0 lg:hidden">
                             <div className="p-6">
-                                <Link href="/" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); window.location.href = '/'; setMobileMenuOpen(false); }} className="mb-6 flex items-center space-x-2">
+                                <div className="flex items-center space-x-2 mb-4 pb-6">
                                     <LogoIcon className="h-8 w-auto" />
                                     <span className="text-lg font-semibold text-white">Wigga</span>
-                                </Link>
+                                </div>
                                 <ul className="space-y-4 text-base">
                                     {mobileMenuItems.map((item, index) => (
                                         <li key={index}>

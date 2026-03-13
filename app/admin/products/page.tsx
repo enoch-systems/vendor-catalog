@@ -271,7 +271,23 @@ const AdminProducts = () => {
 
           {/* Logo */}
           <button onClick={() => window.location.reload()} className="flex items-center space-x-2">
-            <Image src="/wig.png" alt="Logo" width={32} height={32} className="h-8 w-auto object-contain" />
+            <div className="relative h-8 w-8 flex-shrink-0">
+              <Image 
+                src="/wig.png" 
+                alt="Logo" 
+                width={32} 
+                height={32} 
+                className="h-8 w-auto object-contain"
+                loading="lazy"
+                decoding="async"
+                sizes="32px"
+                style={{
+                  background: 'linear-gradient(to right, #374151 0%, #4b5563 50%, #374151 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 1.5s ease-in-out infinite'
+                }}
+              />
+            </div>
             <span className="text-white font-semibold text-lg">Wigga</span>
           </button>
 
@@ -284,7 +300,23 @@ const AdminProducts = () => {
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                <Image src="/avatar.jpeg" alt="Profile" width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
+                <div className="relative w-8 h-8 flex-shrink-0">
+                <Image 
+                  src="/avatar.jpeg" 
+                  alt="Profile" 
+                  width={32} 
+                  height={32} 
+                  className="w-8 h-8 rounded-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  sizes="32px"
+                  style={{
+                    background: 'linear-gradient(to right, #374151 0%, #4b5563 50%, #374151 100%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 1.5s ease-in-out infinite'
+                  }}
+                />
+              </div>
                 <ChevronDown size={16} className="text-gray-300" />
               </button>
 
@@ -330,7 +362,23 @@ const AdminProducts = () => {
         }">
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
             <Link href="/admin/products" className="flex items-center space-x-2">
-              <Image src="/wig.png" alt="Logo" width={32} height={32} className="h-8 w-auto object-contain" />
+              <div className="relative h-8 w-8 flex-shrink-0">
+                <Image 
+                  src="/wig.png" 
+                  alt="Logo" 
+                  width={32} 
+                  height={32} 
+                  className="h-8 w-auto object-contain"
+                  loading="lazy"
+                  decoding="async"
+                  sizes="32px"
+                  style={{
+                    background: 'linear-gradient(to right, #374151 0%, #4b5563 50%, #374151 100%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 1.5s ease-in-out infinite'
+                  }}
+                />
+              </div>
               <span className="text-white font-semibold text-lg">Wigga</span>
             </Link>
             <button
@@ -473,17 +521,25 @@ const AdminProducts = () => {
               {/* Image Container */}
               <div className="relative h-48 overflow-hidden bg-gray-700">
                 {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
-                      !product.inStock ? 'brightness-50' : ''
-                    }`}
-                    loading="lazy"
-                    quality={75}
-                    sizes="(max-width: 640px) 25vw, (max-width: 1024px) 17vw, 15vw"
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
+                        !product.inStock ? 'brightness-50' : ''
+                      }`}
+                      loading="lazy"
+                      decoding="async"
+                      quality={75}
+                      sizes="(max-width: 640px) 25vw, (max-width: 1024px) 17vw, 15vw"
+                      style={{
+                        background: 'linear-gradient(to right, #374151 0%, #4b5563 50%, #374151 100%)',
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmer 1.5s ease-in-out infinite'
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-700">
                     <div className="text-center">

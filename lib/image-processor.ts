@@ -88,7 +88,7 @@ export class ImageProcessor {
     
     // Strip metadata if requested
     if (stripMetadata) {
-      processor = processor.withMetadata({ orientation: normalizeOrientation ? undefined : null });
+      processor = processor.withMetadata({ orientation: normalizeOrientation ? undefined : undefined });
     }
 
     // Normalize orientation if requested

@@ -2,11 +2,11 @@
  * BullMQ setup for background job processing
  */
 
-import { Queue, Worker, QueueScheduler, Job, ConnectionOptions } from 'bullmq';
+import { Queue, Worker, Job, ConnectionOptions } from 'bullmq';
 import { Redis } from 'ioredis';
 
 // Redis connection options
-const redisConnection: ConnectionOptions = {
+const redisConnection: any = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
@@ -119,37 +119,37 @@ export interface JobStatus {
 // Queue event handlers
 export const setupQueueEventHandlers = () => {
   // Image processing queue
-  imageProcessingQueue.on('waiting', (job: any) => {
+  (imageProcessingQueue as any).on('waiting', (job: any) => {
     console.log(`🔄 Job ${job.id} waiting in image processing queue`);
   });
 
-  imageProcessingQueue.on('active', (job: any) => {
+  (imageProcessingQueue as any).on('active', (job: any) => {
     console.log(`⚡ Job ${job.id} active in image processing queue`);
   });
 
-  imageProcessingQueue.on('completed', (job: any) => {
+  (imageProcessingQueue as any).on('completed', (job: any) => {
     console.log(`✅ Job ${job.id} completed in image processing queue`);
   });
 
-  imageProcessingQueue.on('failed', (job: any, err: any) => {
+  (imageProcessingQueue as any).on('failed', (job: any, err: any) => {
     console.error(`❌ Job ${job.id} failed in image processing queue:`, err);
   });
 
   // Image upload queue
-  imageUploadQueue.on('completed', (job: any) => {
+  (imageUploadQueue as any).on('completed', (job: any) => {
     console.log(`✅ Upload job ${job.id} completed`);
   });
 
-  imageUploadQueue.on('failed', (job: any, err: any) => {
+  (imageUploadQueue as any).on('failed', (job: any, err: any) => {
     console.error(`❌ Upload job ${job.id} failed:`, err);
   });
 
   // Image optimization queue
-  imageOptimizationQueue.on('completed', (job: any) => {
+  (imageOptimizationQueue as any).on('completed', (job: any) => {
     console.log(`✅ Optimization job ${job.id} completed`);
   });
 
-  imageOptimizationQueue.on('failed', (job: any, err: any) => {
+  (imageOptimizationQueue as any).on('failed', (job: any, err: any) => {
     console.error(`❌ Optimization job ${job.id} failed:`, err);
   });
 };

@@ -3,6 +3,7 @@
 import React from 'react'
 import { ArrowLeft, ShoppingCart, Settings, X } from 'lucide-react'
 import Link from 'next/link'
+import { OptimizedImage } from '../ui/optimized-image'
 
 interface AdminSideMenuProps {
   currentPath?: string
@@ -43,7 +44,13 @@ export const AdminSideMenu = ({
         <div className="p-6 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <Link href="/admin/products" className="flex items-center space-x-2">
-              <img src="/wig.png" alt="Logo" className="h-6 w-auto object-contain" />
+              <OptimizedImage
+                src="/wig.png"
+                alt="Logo"
+                width={24}
+                height={24}
+                className="h-6 w-auto object-contain"
+              />
               <span className="text-white font-semibold">Wigga</span>
             </Link>
             <button

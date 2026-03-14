@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,7 +48,13 @@ export default function LoginPage() {
                         <Link
                             href="/"
                             aria-label="go home">
-                        <img src="/wig.png" alt="Logo" className="h-8 w-auto object-contain mx-auto" />
+                            <OptimizedImage
+                                src="/wig.png"
+                                alt="Logo"
+                                width={32}
+                                height={32}
+                                className="h-8 w-auto object-contain mx-auto"
+                            />
                         </Link>
                         <h1 className="mb-1 mt-4 text-xl font-semibold">Login as Admin</h1>
                     </div>

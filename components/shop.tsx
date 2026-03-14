@@ -507,8 +507,8 @@ const Shop = () => {
                                     <Link key={product.id} href={`/shop/${product.id}`} className="block">
                                         <div className="bg-white border border-green-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group">
                                             {/* Product Image */}
-                                            <div className="relative overflow-hidden rounded-t-lg h-64 sm:h-72">
-                                                {product.image ? (
+                                            {product.image && (
+                                                <div className="relative overflow-hidden rounded-t-lg h-64 sm:h-72">
                                                     <Image
                                                         src={product.image}
                                                         alt={product.name}
@@ -519,32 +519,24 @@ const Shop = () => {
                                                         }`}
                                                         priority
                                                     />
-                                                ) : (
-                                                    <Image
-                                                        src="/placeholder.png"
-                                                        alt="no image"
-                                                        width={300}
-                                                        height={300}
-                                                        className="w-full h-64 sm:h-72 object-cover"
-                                                    />
-                                                )}
-                                                
-                                                {/* Badge */}
-                                                {product.badge && (
-                                                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                                        {product.badge}
-                                                    </span>
-                                                )}
-                                                
-                                                {/* Sold Out Badge */}
-                                                {!product.inStock && (
-                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                        <div className="bg-white px-3 py-1 rounded-full">
-                                                            <span className="text-red-500 font-semibold text-sm">SOLD OUT</span>
+                                                    
+                                                    {/* Badge */}
+                                                    {product.badge && (
+                                                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                            {product.badge}
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Sold Out Badge */}
+                                                    {!product.inStock && (
+                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                            <div className="bg-white px-3 py-1 rounded-full">
+                                                                <span className="text-red-500 font-semibold text-sm">SOLD OUT</span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    )}
+                                                </div>
+                                            )}
                                             
                                             {/* Product Info */}
                                             <div className="p-3 sm:p-4">

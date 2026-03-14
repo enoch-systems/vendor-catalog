@@ -1,5 +1,20 @@
 // compress image before upload for faster performance
 async function compressImage(file: File): Promise<File> {
+  const maxWidth = 1920;
+  const outputQuality = 0.8; // 80%
+
+  // Determine best output format (prefer webp when available)
+  const supportsWebp = (() => {
+    try {
+      const canvas = document.createElement('canvas');
+      return canvas.toDataURL('image/webp').startsWith('data:image/webp');
+    } catch {
+      return false;
+    }
+  })();
+
+  const outputType = supportsWebp ? 'image/webp' : 'image/jpeg';
+
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -9,31 +24,33 @@ async function compressImage(file: File): Promise<File> {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let { width, height } = img;
-        
-        // Resize if image is too large (max 1920px width)
-        if (width > 1920) {
-          height = (height * 1920) / width;
-          width = 1920;
+
+        // Downscale large images for faster upload/render
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+              resolve(new File([blob], file.name, { type: outputType }));
             } else {
               resolve(file);
             }
           },
-          'image/jpeg',
-          0.8
+          outputType,
+          outputQuality
         );
       };
+      img.onerror = () => resolve(file);
     };
+    reader.onerror = () => resolve(file);
   });
 }
 

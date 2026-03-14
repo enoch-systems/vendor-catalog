@@ -1,10 +1,10 @@
 /**
- * Server-side image processing service using Sharp
+ * Vercel-ready image processing service using Sharp
+ * Optimized for serverless deployment with cloud storage integration
  */
 
 import sharp from 'sharp';
 import path from 'path';
-import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ImageProcessingOptions {
@@ -28,8 +28,9 @@ export interface ProcessedImageResult {
     size: number;
     width: number;
     height: number;
-    path: string;
-    url: string;
+    buffer: Buffer;
+    url?: string;
+    key?: string;
   }[];
   metadata: sharp.Metadata;
 }
@@ -41,8 +42,6 @@ export interface ImageSize {
 }
 
 export class ImageProcessor {
-  private readonly uploadDir: string;
-  private readonly processedDir: string;
   private readonly defaultSizes: ImageSize[] = [
     { width: 48, height: 48, suffix: 'thumb' },
     { width: 96, height: 96, suffix: 'small' },
@@ -51,24 +50,17 @@ export class ImageProcessor {
     { width: 1024, height: 1024, suffix: 'xlarge' },
   ];
 
-  constructor(uploadDir = './uploads', processedDir = './processed') {
-    this.uploadDir = uploadDir;
-    this.processedDir = processedDir;
-  }
+  constructor(
+    private storageProvider?: 'cloudinary' | 's3' | 'vercel-blob',
+    private storageConfig?: Record<string, any>
+  ) {}
 
   /**
-   * Initialize directories
+   * Process an image buffer (Vercel serverless compatible)
    */
-  async initialize(): Promise<void> {
-    await fs.mkdir(this.uploadDir, { recursive: true });
-    await fs.mkdir(this.processedDir, { recursive: true });
-  }
-
-  /**
-   * Process an image file
-   */
-  async processImage(
-    inputPath: string,
+  async processImageBuffer(
+    inputBuffer: Buffer,
+    originalFilename: string,
     options: ImageProcessingOptions = {}
   ): Promise<ProcessedImageResult> {
     const {
@@ -81,14 +73,15 @@ export class ImageProcessor {
     } = options;
 
     // Get image metadata
-    const metadata = await sharp(inputPath).metadata();
+    const metadata = await sharp(inputBuffer).metadata();
+    const originalSize = inputBuffer.length;
     
     // Create base processor
-    let processor = sharp(inputPath);
+    let processor = sharp(inputBuffer);
     
     // Strip metadata if requested
     if (stripMetadata) {
-      processor = processor.withMetadata({ orientation: normalizeOrientation ? undefined : undefined });
+      processor = processor.withMetadata({});
     }
 
     // Normalize orientation if requested
@@ -101,7 +94,7 @@ export class ImageProcessor {
     // Generate different formats and sizes
     for (const format of formats) {
       for (const size of sizes) {
-        const result = await this.processVariant(processor, format, size, quality, resizeOptions, metadata);
+        const result = await this.processVariantToBuffer(processor, format, size, quality, resizeOptions, metadata);
         processed.push(result);
       }
     }
@@ -111,7 +104,7 @@ export class ImageProcessor {
         width: metadata.width || 0,
         height: metadata.height || 0,
         format: metadata.format || 'unknown',
-        size: (await fs.stat(inputPath)).size
+        size: originalSize
       },
       processed,
       metadata
@@ -119,9 +112,20 @@ export class ImageProcessor {
   }
 
   /**
-   * Process a single image variant
+   * Process an image file (legacy compatibility)
    */
-  private async processVariant(
+  async processImage(
+    inputPath: string,
+    options: ImageProcessingOptions = {}
+  ): Promise<ProcessedImageResult> {
+    // For Vercel deployment, prefer buffer-based processing
+    throw new Error('Use processImageBuffer for Vercel serverless deployment. File system access is limited.');
+  }
+
+  /**
+   * Process a single image variant to buffer (Vercel compatible)
+   */
+  private async processVariantToBuffer(
     baseProcessor: sharp.Sharp,
     format: string,
     size: number,
@@ -130,7 +134,6 @@ export class ImageProcessor {
     originalMetadata: sharp.Metadata
   ): Promise<ProcessedImageResult['processed'][0]> {
     const filename = `${uuidv4()}_${size}.${format}`;
-    const outputPath = path.join(this.processedDir, filename);
 
     // Create processor for this variant
     let processor = baseProcessor.clone();
@@ -170,35 +173,47 @@ export class ImageProcessor {
         break;
       case 'png':
         processor = processor.png({
-          quality,
           progressive: true,
           compressionLevel: 9
         });
         break;
     }
 
-    // Process and save
-    await processor.toFile(outputPath);
-
-    // Get processed metadata
-    const processedMetadata = await sharp(outputPath).metadata();
-    const stats = await fs.stat(outputPath);
+    // Process to buffer
+    const buffer = await processor.toBuffer();
+    const metadata = await sharp(buffer).metadata();
 
     return {
       format,
-      size: stats.size,
-      width: processedMetadata.width || 0,
-      height: processedMetadata.height || 0,
-      path: outputPath,
-      url: `/processed/${filename}`
+      size: buffer.length,
+      width: metadata.width || 0,
+      height: metadata.height || 0,
+      buffer,
+      url: undefined,
+      key: filename
     };
   }
 
   /**
-   * Generate thumbnails with specific dimensions
+   * Process a single image variant (legacy file-based)
    */
-  async generateThumbnails(
-    inputPath: string,
+  private async processVariant(
+    baseProcessor: sharp.Sharp,
+    format: string,
+    size: number,
+    quality: number,
+    resizeOptions: sharp.ResizeOptions,
+    originalMetadata: sharp.Metadata
+  ): Promise<ProcessedImageResult['processed'][0]> {
+    // For Vercel deployment, use buffer-based processing
+    throw new Error('Use processVariantToBuffer for Vercel serverless deployment.');
+  }
+
+  /**
+   * Generate thumbnails from buffer (Vercel compatible)
+   */
+  async generateThumbnailsFromBuffer(
+    inputBuffer: Buffer,
     sizes: { width: number; height: number }[] = [
       { width: 150, height: 150 },
       { width: 300, height: 300 },
@@ -209,9 +224,8 @@ export class ImageProcessor {
 
     for (const size of sizes) {
       const filename = `thumb_${size.width}x${size.height}_${uuidv4()}.webp`;
-      const outputPath = path.join(this.processedDir, filename);
 
-      await sharp(inputPath)
+      const buffer = await sharp(inputBuffer)
         .resize(size.width, size.height, {
           fit: 'cover',
           position: 'center',
@@ -221,18 +235,18 @@ export class ImageProcessor {
           quality: 80,
           effort: 6
         })
-        .toFile(outputPath);
+        .toBuffer();
 
-      const metadata = await sharp(outputPath).metadata();
-      const stats = await fs.stat(outputPath);
+      const metadata = await sharp(buffer).metadata();
 
       results.push({
         format: 'webp',
-        size: stats.size,
+        size: buffer.length,
         width: metadata.width || 0,
         height: metadata.height || 0,
-        path: outputPath,
-        url: `/processed/${filename}`
+        buffer,
+        url: undefined,
+        key: filename
       });
     }
 
@@ -240,14 +254,28 @@ export class ImageProcessor {
   }
 
   /**
-   * Optimize image for web (single format, multiple sizes)
+   * Generate thumbnails with specific dimensions (legacy)
    */
-  async optimizeForWeb(
+  async generateThumbnails(
     inputPath: string,
+    sizes: { width: number; height: number }[] = [
+      { width: 150, height: 150 },
+      { width: 300, height: 300 },
+      { width: 600, height: 600 }
+    ]
+  ): Promise<ProcessedImageResult['processed']> {
+    throw new Error('Use generateThumbnailsFromBuffer for Vercel serverless deployment.');
+  }
+
+  /**
+   * Optimize image for web from buffer (Vercel compatible)
+   */
+  async optimizeForWebFromBuffer(
+    inputBuffer: Buffer,
     maxWidth = 2048,
     quality = 85
   ): Promise<ProcessedImageResult['processed']> {
-    const metadata = await sharp(inputPath).metadata();
+    const metadata = await sharp(inputBuffer).metadata();
     const results: ProcessedImageResult['processed'] = [];
 
     // Responsive sizes for web
@@ -256,9 +284,8 @@ export class ImageProcessor {
 
     for (const size of sizes) {
       const filename = `web_${size}w_${uuidv4()}.webp`;
-      const outputPath = path.join(this.processedDir, filename);
 
-      await sharp(inputPath)
+      const buffer = await sharp(inputBuffer)
         .resize(size, null, {
           withoutEnlargement: true,
           fit: 'inside'
@@ -267,18 +294,18 @@ export class ImageProcessor {
           quality,
           effort: 6
         })
-        .toFile(outputPath);
+        .toBuffer();
 
-      const processedMetadata = await sharp(outputPath).metadata();
-      const stats = await fs.stat(outputPath);
+      const processedMetadata = await sharp(buffer).metadata();
 
       results.push({
         format: 'webp',
-        size: stats.size,
+        size: buffer.length,
         width: processedMetadata.width || 0,
         height: processedMetadata.height || 0,
-        path: outputPath,
-        url: `/processed/${filename}`
+        buffer,
+        url: undefined,
+        key: filename
       });
     }
 
@@ -286,13 +313,24 @@ export class ImageProcessor {
   }
 
   /**
-   * Extract dominant colors from image
+   * Optimize image for web (single format, multiple sizes) - legacy
    */
-  async extractColors(inputPath: string, count = 5): Promise<{
+  async optimizeForWeb(
+    inputPath: string,
+    maxWidth = 2048,
+    quality = 85
+  ): Promise<ProcessedImageResult['processed']> {
+    throw new Error('Use optimizeForWebFromBuffer for Vercel serverless deployment.');
+  }
+
+  /**
+   * Extract dominant colors from buffer (Vercel compatible)
+   */
+  async extractColorsFromBuffer(inputBuffer: Buffer, count = 5): Promise<{
     dominant: string;
     palette: string[];
   }> {
-    const { dominant } = await sharp(inputPath)
+    const result = await sharp(inputBuffer)
       .resize(150, 150, { fit: 'inside' })
       .raw()
       .toBuffer({ resolveWithObject: true })
@@ -319,33 +357,53 @@ export class ImageProcessor {
         };
       });
 
-    return dominant;
+    return result;
   }
 
   /**
-   * Clean up processed files
+   * Extract dominant colors from image (legacy)
+   */
+  async extractColors(inputPath: string, count = 5): Promise<{
+    dominant: string;
+    palette: string[];
+  }> {
+    throw new Error('Use extractColorsFromBuffer for Vercel serverless deployment.');
+  }
+
+  /**
+   * Clean up processed files (not applicable for Vercel serverless)
    */
   async cleanup(maxAge = 24 * 60 * 60 * 1000): Promise<void> {
-    try {
-      const files = await fs.readdir(this.processedDir);
-      const now = Date.now();
-
-      for (const file of files) {
-        const filePath = path.join(this.processedDir, file);
-        const stats = await fs.stat(filePath);
-        
-        if (now - stats.mtime.getTime() > maxAge) {
-          await fs.unlink(filePath);
-          console.log(`🗑️ Cleaned up old file: ${file}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error during cleanup:', error);
-    }
+    // In Vercel serverless, files are not persisted
+    // Use cloud storage lifecycle policies instead
+    console.log('Cleanup not needed for Vercel serverless deployment');
   }
 
   /**
-   * Get image info without processing
+   * Get image info from buffer (Vercel compatible)
+   */
+  async getImageInfoFromBuffer(inputBuffer: Buffer): Promise<{
+    width: number;
+    height: number;
+    format: string;
+    size: number;
+    hasAlpha: boolean;
+    colorSpace: string;
+  }> {
+    const metadata = await sharp(inputBuffer).metadata();
+
+    return {
+      width: metadata.width || 0,
+      height: metadata.height || 0,
+      format: metadata.format || 'unknown',
+      size: inputBuffer.length,
+      hasAlpha: metadata.hasAlpha || false,
+      colorSpace: metadata.space || 'srgb'
+    };
+  }
+
+  /**
+   * Get image info without processing (legacy)
    */
   async getImageInfo(inputPath: string): Promise<{
     width: number;
@@ -355,19 +413,105 @@ export class ImageProcessor {
     hasAlpha: boolean;
     colorSpace: string;
   }> {
-    const metadata = await sharp(inputPath).metadata();
-    const stats = await fs.stat(inputPath);
+    throw new Error('Use getImageInfoFromBuffer for Vercel serverless deployment.');
+  }
 
-    return {
-      width: metadata.width || 0,
-      height: metadata.height || 0,
-      format: metadata.format || 'unknown',
-      size: stats.size,
-      hasAlpha: metadata.hasAlpha || false,
-      colorSpace: metadata.space || 'srgb'
-    };
+  /**
+   * Upload processed image to cloud storage
+   */
+  async uploadToStorage(
+    buffer: Buffer,
+    key: string,
+    contentType: string
+  ): Promise<{ url: string; key: string }> {
+    if (!this.storageProvider || !this.storageConfig) {
+      throw new Error('Storage provider not configured');
+    }
+
+    switch (this.storageProvider) {
+      case 'cloudinary':
+        return this.uploadToCloudinary(buffer, key, contentType);
+      case 'vercel-blob':
+        return this.uploadToVercelBlob(buffer, key, contentType);
+      case 's3':
+        return this.uploadToS3(buffer, key, contentType);
+      default:
+        throw new Error(`Unsupported storage provider: ${this.storageProvider}`);
+    }
+  }
+
+  private async uploadToCloudinary(
+    buffer: Buffer,
+    key: string,
+    contentType: string
+  ): Promise<{ url: string; key: string }> {
+    // Implementation depends on your Cloudinary setup
+    const cloudinary = require('cloudinary').v2;
+    
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          public_id: key,
+          format: key.split('.').pop(),
+        },
+        (error: any, result: any) => {
+          if (error) reject(error);
+          else resolve({ url: result.secure_url, key });
+        }
+      ).end(buffer);
+    });
+  }
+
+  private async uploadToVercelBlob(
+    buffer: Buffer,
+    key: string,
+    contentType: string
+  ): Promise<{ url: string; key: string }> {
+    // Implementation for Vercel Blob storage
+    const { put } = require('@vercel/blob');
+    
+    const blob = await put(key, buffer, {
+      contentType,
+      access: 'public',
+    });
+    
+    return { url: blob.url, key: blob.pathname };
+  }
+
+  private async uploadToS3(
+    buffer: Buffer,
+    key: string,
+    contentType: string
+  ): Promise<{ url: string; key: string }> {
+    // Implementation for AWS S3
+    const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+    
+    if (!this.storageConfig) {
+      throw new Error('S3 configuration not provided');
+    }
+    
+    const s3Client = new S3Client(this.storageConfig);
+    
+    await s3Client.send(new PutObjectCommand({
+      Bucket: this.storageConfig.bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }));
+    
+    const url = `https://${this.storageConfig.bucketName}.s3.amazonaws.com/${key}`;
+    return { url, key };
   }
 }
 
-// Export singleton instance
+// Export factory function for Vercel deployment
+export function createImageProcessor(
+  storageProvider?: 'cloudinary' | 's3' | 'vercel-blob',
+  storageConfig?: Record<string, any>
+): ImageProcessor {
+  return new ImageProcessor(storageProvider, storageConfig);
+}
+
+// Export singleton instance (legacy compatibility)
 export const imageProcessor = new ImageProcessor();
